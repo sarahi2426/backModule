@@ -42,12 +42,34 @@ const registrarUser = asyncHandler(async (req , res) =>{
     
 })
 
-const loginUser = (req , res) =>{
-    res.status(200).json({message: "login usuario"})
+const loginUser = asyncHandler(async (req , res) =>{
+
+    const {email , password} = req.body
+
+    const user= await User.findOne({email})
+
+    if(user && (await bcrypt.compare(password, user.password))){
+
+        res.status(200).json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            token:generarToken(user._id)
+        })
+
+    }else{
+        res.status(400)
+        throw new Error("Contraseña o usario invalido")
+    }
+
+})
+
+const generarToken =(id) =>{
+    return jwt.sign({id},process.env.JWT_SECRET ,{ expiresIn:'30d'})
 }
 
 const dataUser = (req , res) =>{
-    res.status(200).json({message: "datos usuario"})
+    res.status(200).json(req.user)
 }
 
 module.exports ={
